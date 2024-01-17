@@ -2,39 +2,29 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,
-initial-scale=1, shrink-to-fit=no">
-
-    <title>
-    {% block title %}
-        Мой сайт
-    {% endblock %}
-</title>
-
-    <title>Интернет-магазин</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Регистрация в базу данных</title>
 </head>
 <body>
-    <header>
-        <h1>Интернет-магазин</h1>
+    <h1>Регистрация</h1>
+    <form method="post" action="/">
+        {{ form.hidden_tag() }}
+        <p><strong>Имя:</strong> {{ form.first_name(size=20) }}</p>
+        <p><strong>Фамилия:</strong> {{ form.last_name(size=20) }}</p>
+        <p><strong>Email:</strong> {{ form.email(size=20) }}</p>
+        <p><strong>Пароль:</strong> {{ form.password(size=20) }}</p>
+        <p>{{ form.submit() }}</p>
+    </form>
 
-    </header>
-
-    <nav>
-        <ul>
-            <li><a href="/">Главная</a></li>
-            <li><a href="/clothing">Одежда</a></li>
-            <li><a href="/shoes">Обувь</a></li>
-        </ul>
-    </nav>
-
-    {% block content %}
-
-    {% endblock %}
-
+    <h2>Зарегистрированные пользователи</h2>
+    <ul>
+        {% for user in users %}
+            <li class="col-12 col-md-6"><strong>Имя пользователя:</strong> {{ user.first_name }} <strong>Фамилия пользователя:</strong> {{ user.last_name }} <strong>Email пользователя:</strong> {{ user.email }}</li>
+        {% endfor %}
+    </ul>
 
     <footer>
         <p>Все права защищены &copy;</p>
     </footer>
-
 </body>
 </html>
