@@ -19,7 +19,7 @@ def download_file(url, folder, name_proc):
 
     end_time_sin = time.time()
 
-    print(f"Время скачивания файла {name_proc}: {end_time_sin - start_time_sin}")
+    #print(f"Время скачивания файла {name_proc}: {end_time_sin - start_time_sin}")
 
 
 def download_images_multithread(urls, folder):
@@ -73,25 +73,33 @@ def main():
 
     folder = args.folder if args.folder else os.getcwd()
 
-    start_time = time.time()
+    start_time_sin = time.time()
 
     # Синхронный подход
     for url in urls:
         download_file(url, folder, "синхронно")
-
+    end_time_sin = time.time()
+    print(f"Суммарное время выполелния синхронного: {end_time_sin - start_time_sin}")
+    start_time_theard = time.time()
     # Многопоточный подход
     download_images_multithread(urls, folder)
+    end_time_theard= time.time()
+    print(f"Суммарное время выполелния многопоточного: {end_time_theard - start_time_theard}")
 
+    start_time_proc = time.time()
     # Многопроцессорный подход
     download_images_multiprocess(urls, folder)
+    end_time_proc = time.time()
+    print(f"Суммарное время выполелния многопроцессорного: {end_time_proc - start_time_proc}")
 
+    start_time_asin = time.time()
     # Асинхронный подход
     loop = asyncio.get_event_loop()
     loop.run_until_complete(download_images_async(urls, folder))
 
-    end_time = time.time()
+    end_time_asin = time.time()
 
-    print(f"Время выпонения программы: {end_time - start_time}")
+    print(f"Суммарное время выполелния асинхронного: {end_time_asin - start_time_asin}")
 
 
 if __name__ == "__main__":
