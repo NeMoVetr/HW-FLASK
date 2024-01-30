@@ -74,7 +74,7 @@ metadata.create_all(create_engine(DATABASE_URL))
 
 @app.post("/users/", response_model=User)
 async def create_user(user: User):
-    query = users.insert().values(**user.dict())
+    query = users.insert().values(**user.model_dump())
     await database.execute(query)
     return user
 
@@ -97,7 +97,7 @@ async def read_user(user_id: int):
 
 @app.put("/users/{user_id}", response_model=User)
 async def update_user(user_id: int, user: User):
-    query = users.update().where(users.c.id == user_id).values(**user.dict())
+    query = users.update().where(users.c.id == user_id).values(**user.model_dump())
     await database.execute(query)
     return user
 
@@ -112,10 +112,10 @@ async def delete_user(user_id: int):
 
 @app.post("/products/", response_model=Product)
 async def create_product(product: Product):
-    query = products.insert().values(**product.dict())
+    query = products.insert().values(**product.model_dump())
     result = await database.execute(query)
     product_id = result
-    return {**product.dict(), "id": product_id}
+    return {**product.model_dump(), "id": product_id}
 
 
 @app.get("/products/")
@@ -136,7 +136,7 @@ async def read_product(product_id: int):
 
 @app.put("/products/{product_id}", response_model=Product)
 async def update_product(product_id: int, product: Product):
-    query = products.update().where(products.c.id == product_id).values(**product.dict())
+    query = products.update().where(products.c.id == product_id).values(**product.model_dump())
     await database.execute(query)
     return product
 
@@ -176,7 +176,7 @@ async def read_order(order_id: int):
 
 @app.put("/orders/{order_id}", response_model=Order)
 async def update_order(order_id: int, order: Order):
-    query = orders.update().where(orders.c.id == order_id).values(**order.dict())
+    query = orders.update().where(orders.c.id == order_id).values(**order.model_dump())
     await database.execute(query)
     return order
 
