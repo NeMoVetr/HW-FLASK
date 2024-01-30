@@ -1,0 +1,10 @@
+INFO 2024-01-30 23:44:41,417 autoreload 20064 18620 Watching for file changes with StatReloader
+INFO 2024-01-30 23:44:45,393 views 20064 10656 Страницу 'Главаня' кто-то посетил (-_-)
+INFO 2024-01-30 23:44:45,393 basehttp 20064 10656 "GET / HTTP/1.1" 200 111
+WARNING 2024-01-30 23:44:45,526 log 20064 10656 Not Found: /favicon.ico
+WARNING 2024-01-30 23:44:45,527 basehttp 20064 10656 "GET /favicon.ico HTTP/1.1" 404 2441
+WARNING 2024-01-30 23:45:05,618 log 20064 10656 Not Found: /docs
+WARNING 2024-01-30 23:45:05,618 basehttp 20064 10656 "GET /docs HTTP/1.1" 404 2420
+INFO 2024-01-30 23:45:06,738 basehttp 20064 10656 "GET /about HTTP/1.1" 301 0
+INFO 2024-01-30 23:45:06,765 views 20064 708 Страницу 'О себе' кто-то посетил (-_-)
+INFO 2024-01-30 23:45:06,766 basehttp 20064 708 "GET /about/ HTTP/1.1" 200 204
