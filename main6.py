@@ -1,8 +1,7 @@
 from datetime import datetime
-
+from databases import Database
 import pandas as pd
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
 from sqlalchemy import create_engine, Table, Column, Integer, String, ForeignKey, DateTime, MetaData
@@ -11,7 +10,8 @@ app = FastAPI()
 
 DATABASE_URL = "sqlite:///./shop.bd"
 
-engine = create_engine(DATABASE_URL)
+database = Database(DATABASE_URL)
+
 
 metadata = MetaData()
 
@@ -69,147 +69,123 @@ class Order(BaseModel):
     status: str
 
 
-metadata.create_all(engine)
+metadata.create_all(create_engine(DATABASE_URL))
 
 
 @app.post("/users/", response_model=User)
 async def create_user(user: User):
-    print("user.model_dump():", user.model_dump())
-    with engine.connect() as connection:
-        query = users.insert().values(**user.model_dump())
-        connection.execute(query)
-
-        print("user:", user)
-        return user
+    query = users.insert().values(**user.dict())
+    await database.execute(query)
+    return user
 
 
 @app.get("/users/")
 async def read_users(request: Request):
-    with engine.connect() as connection:
-        query = users.select()
-        print(query)
-        users_result = connection.execute(query).fetchall()
-        print(f"Users fetched: {users_result}")
-        user_table = pd.DataFrame(users_result,
-                                  columns=["id", "first_name", "last_name", "email", "password"]).to_html()
-        return HTMLResponse(content=templates.get_template("shop.html").render(request=request, user_table=user_table))
+    query = users.select()
+    users_result = await database.fetch_all(query)
+    user_table = pd.DataFrame(users_result, columns=["id", "first_name", "last_name", "email", "password"]).to_html()
+    return templates.TemplateResponse("shop.html", {"request": request, "user_table": user_table})
 
 
 @app.get("/users/{user_id}", response_model=User)
 async def read_user(user_id: int):
-    with engine.connect() as connection:
-        query = users.select().where(users.c.id == user_id)
-        user_result = connection.execute(query).fetchone()
-
-        user_model_dump = User(**user_result.model_dump())
-        return user_model_dump
+    query = users.select().where(users.c.id == user_id)
+    user_result = await database.fetch_one(query)
+    user_model = User(**user_result)
+    return user_model
 
 
 @app.put("/users/{user_id}", response_model=User)
 async def update_user(user_id: int, user: User):
-    with engine.connect() as connection:
-        query = users.update().where(users.c.id == user_id).values(**user.model_dump())
-        connection.execute(query)
-        return user
+    query = users.update().where(users.c.id == user_id).values(**user.dict())
+    await database.execute(query)
+    return user
 
 
 @app.delete("/users/{user_id}", response_model=User)
-def delete_user(user_id: int):
-    with engine.connect() as connection:
-        query = users.delete().where(users.c.id == user_id)
-        user_result = connection.execute(query).fetchone()
-        user_model_dump = User(**user_result.model_dump())
-        return user_model_dump
+async def delete_user(user_id: int):
+    query = users.delete().where(users.c.id == user_id)
+    user_result = await database.fetch_one(query)
+    user_model = User(**user_result)
+    return user_model
 
 
 @app.post("/products/", response_model=Product)
 async def create_product(product: Product):
-    with engine.connect() as connection:
-        query = products.insert().values(**product.model_dump())
-        result = connection.execute(query)
-        product_id = result.inserted_primary_key[0]
-        return {**product.model_dump(), "id": product_id}
+    query = products.insert().values(**product.dict())
+    result = await database.execute(query)
+    product_id = result
+    return {**product.dict(), "id": product_id}
 
 
 @app.get("/products/")
-def read_products(request: Request):
-    with engine.connect() as connection:
-        query = products.select()
-        products_result = connection.execute(query).fetchall()
-        product_table = pd.DataFrame(products_result, columns=["id", "name", "description", "price"]).to_html()
-        return HTMLResponse(
-            content=templates.get_template("shop.html").render(request=request, product_table=product_table))
+async def read_products(request: Request):
+    query = products.select()
+    products_result = await database.fetch_all(query)
+    product_table = pd.DataFrame(products_result, columns=["id", "name", "description", "price"]).to_html()
+    return templates.TemplateResponse("shop.html", {"request": request, "product_table": product_table})
 
 
 @app.get("/products/{product_id}", response_model=Product)
-def read_product(product_id: int):
-    with engine.connect() as connection:
-        query = products.select().where(products.c.id == product_id)
-        product_result = connection.execute(query).fetchone()
-
-        product_model_dump = Product(**product_result.model_dump())
-        return product_model_dump
+async def read_product(product_id: int):
+    query = products.select().where(products.c.id == product_id)
+    product_result = await database.fetch_one(query)
+    product_model = Product(**product_result)
+    return product_model
 
 
 @app.put("/products/{product_id}", response_model=Product)
-def update_product(product_id: int, product: Product):
-    with engine.connect() as connection:
-        query = products.update().where(products.c.id == product_id).values(**product.model_dump())
-        connection.execute(query)
-        return product
+async def update_product(product_id: int, product: Product):
+    query = products.update().where(products.c.id == product_id).values(**product.dict())
+    await database.execute(query)
+    return product
 
 
 @app.delete("/products/{product_id}", response_model=Product)
-def delete_product(product_id: int):
-    with engine.connect() as connection:
-        query = products.delete().where(products.c.id == product_id)
-        product_result = connection.execute(query).fetchone()
-        product_model_dump = Product(**product_result.model_dump())
-        return product_model_dump
+async def delete_product(product_id: int):
+    query = products.delete().where(products.c.id == product_id)
+    product_result = await database.fetch_one(query)
+    product_model = Product(**product_result)
+    return product_model
 
 
 @app.post("/orders/", response_model=Order)
-def create_order(order: Order):
-    with engine.connect() as connection:
-        query = orders.insert().values(**order.model_dump(), order_date=datetime.utcnow())
-        result = connection.execute(query)
-        order_id = result.inserted_primary_key[0]
-        return {**order.model_dump(), "id": order_id, "order_date": datetime.utcnow()}
+async def create_order(order: Order):
+    query = orders.insert().values(**order.model_dump())
+    result = await database.execute(query)
+    order_id = result
+    return {**order.model_dump(), "id": order_id, "date_ordered": datetime.utcnow()}
 
 
 @app.get("/orders/")
-def read_orders(request: Request):
-    with engine.connect() as connection:
-        query = orders.select()
-        orders_result = connection.execute(query).fetchall()
-        order_table = pd.DataFrame(orders_result,
-                                   columns=["id", "user_id", "product_id", "order_date", "status"]).to_html()
-        return HTMLResponse(
-            content=templates.get_template("shop.html").render(request=request, order_table=order_table))
+async def read_orders(request: Request):
+    query = orders.select()
+    orders_result = await database.fetch_all(query)
+    order_table = pd.DataFrame(orders_result,
+                               columns=["id", "user_id", "product_id", "date_ordered", "status"]).to_html()
+    return templates.TemplateResponse("shop.html", {"request": request, "order_table": order_table})
 
 
 @app.get("/orders/{order_id}", response_model=Order)
-def read_order(order_id: int):
-    with engine.connect() as connection:
-        query = orders.select().where(orders.c.id == order_id)
-        order_result = connection.execute(query).fetchone()
-        order_model_dump = Order(**order_result.model_dump())
-        return order_model_dump
+async def read_order(order_id: int):
+    query = orders.select().where(orders.c.id == order_id)
+    order_result = await database.fetch_one(query)
+    order_model = Order(**order_result)
+    return order_model
 
 
 @app.put("/orders/{order_id}", response_model=Order)
-def update_order(order_id: int, order: Order):
-    with engine.connect() as connection:
-        query = orders.update().where(orders.c.id == order_id).values(**order.model_dump())
-        connection.execute(query)
-        return order
+async def update_order(order_id: int, order: Order):
+    query = orders.update().where(orders.c.id == order_id).values(**order.dict())
+    await database.execute(query)
+    return order
 
 
 @app.delete("/orders/{order_id}", response_model=Order)
-def delete_order(order_id: int):
-    with engine.connect() as connection:
-        query = orders.delete().where(orders.c.id == order_id)
-        order_result = connection.execute(query).fetchone()
-        order_model_dump = Order(**order_result.model_dump())
-        return order_model_dump
+async def delete_order(order_id: int):
+    query = orders.delete().where(orders.c.id == order_id)
+    order_result = await database.fetch_one(query)
+    order_model = Order(**order_result)
+    return order_model
+
 
