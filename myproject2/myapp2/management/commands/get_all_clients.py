@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from myproject.myapp2.models import Client
+from .models import Client
 
 
 class Command(BaseCommand):
