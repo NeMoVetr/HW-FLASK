@@ -4,20 +4,20 @@ import pandas as pd
 from django.shortcuts import render
 from django.utils import timezone
 
-from myproject2.myapp2.models import Order
+from .models import Order
 
 
 # Create your views here.
 
-def ordered_products(request):
+def ordered_products(request, client_id):
     today = timezone.now()
     last_week = today - timedelta(days=7)
     last_month = today - timedelta(days=30)
     last_year = today - timedelta(days=365)
 
-    orders_last_week = Order.objects.filter(order_date__gte=last_week)
-    orders_last_month = Order.objects.filter(order_date__gte=last_month)
-    orders_last_year = Order.objects.filter(order_date__gte=last_year)
+    orders_last_week = Order.objects.filter(client_id=client_id, order_date__gte=last_week)
+    orders_last_month = Order.objects.filter(client_id=client_id, order_date__gte=last_month)
+    orders_last_year = Order.objects.filter(client_id=client_id, order_date__gte=last_year)
 
     products_last_week = set()
     products_last_month = set()
@@ -38,7 +38,8 @@ def ordered_products(request):
 
     html_table = pd.DataFrame(data).to_html()
     context = {
-        'html_table': html_table
+        'html_table': html_table,
+        'client_id': client_id,
     }
 
     return render(request, 'ordered_products.html', context)
